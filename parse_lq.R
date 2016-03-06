@@ -1,6 +1,5 @@
-#install.packages("xml2")
-#library(rvest)
-
+library(rvest)
+library(stringr)
 location_name<-address<-phone_number<-fax_number<-latitude<-longitude<-
   floors<-rooms<-suites<-check_in_time<-check_out_time<-
   indoor_swimming_pool <- fitness_center<-outdoor_swimming_pool <- bright_side_market <- business_center <- express_check_out <-
@@ -20,7 +19,7 @@ for (i in 1:length(dir("data/lq"))){
   x2 <- p %>%
     html_nodes(".hotelDetailsBasicInfoTitle p") %>%
     html_text(trim=TRUE) %>%
-    strsplit("\\n") %>%
+    strsplit("\n") %>%
     lapply(function(x) gsub("^\\s+|\\s+$", "", x)) %>%
     unlist()
   x2 <- unique(x2[x2!=""])
@@ -55,8 +54,10 @@ for (i in 1:length(dir("data/lq"))){
     unlist()
   x5 <- unique(x5[x5!=""]) %>%
     strsplit(split=": ") 
+  
   d1<-sapply(x5,function(x) x[[1]])
   d2<-sapply(x5,function(x) x[[2]])
+  
   names(d2) = d1
   
   #nearbys
@@ -144,9 +145,25 @@ for (i in 1:length(dir("data/lq"))){
   #area_companies_and_businesses[i] <- (n7-n6)
 }
 
+c=logical(length = 0)
+for(i in seq_along(address)){
+  a <- str_detect(address[i], state.abb)
+  if(!TRUE %in% a){
+    c=c(c, FALSE)
+  }
+  else{c=c(c, TRUE)
+  
+  }
+}
 lq = data.frame(location_name, address, phone_number, fax_number, latitude,longitude,
                 floors, rooms, suites,check_in_time,check_out_time,
                 indoor_swimming_pool , fitness_center,outdoor_swimming_pool , bright_side_market , business_center , express_check_out ,meeting_facilities , spa , 
-                gr_microwaves_all , gr_fridge_all , gr_samsung_flat_panel , gr_plug_and_play ,gr_whirlpool_select_rooms, 
+                gr_microwaves_all , gr_fridge_all , gr_samsung_flat_panel , gr_plug_and_play ,gr_whirlpool_select_rooms, c,
                 #nearby_sports_and_recreation , nearby_restaurants , entertainment_and_shopping ,area_attractions_and_landmarks , area_companies_and_businesses,
                 stringsAsFactors = FALSE)
+
+lq=lq[which(lq$c==TRUE),]
+
+lq$c=NULL
+
+save(lq, file="data/lq.Rdata")
