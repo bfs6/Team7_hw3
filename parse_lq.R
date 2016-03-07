@@ -1,5 +1,6 @@
+#install.packages("xml2")
 library(rvest)
-library(stringr)
+
 location_name<-address<-state<-city<-phone_number<-fax_number<-latitude<-longitude<-
   floors<-rooms<-suites<-check_in_time<-check_out_time<-
   indoor_swimming_pool <- fitness_center<-outdoor_swimming_pool <- bright_side_market <- business_center <- express_check_out <-
@@ -51,6 +52,7 @@ for (i in 1:length(dir("data/lq"))){
     html_text(trim=TRUE) %>%
     strsplit("\r\n") %>%
     lapply(function(x) gsub("^\\s+ | \\s+$","",x)) %>%
+    lapply(function(x) gsub("\r","",x))%>%
     unlist()
   x5 <- unique(x5[x5!=""]) %>%
     strsplit(split=": ") 
@@ -61,8 +63,8 @@ for (i in 1:length(dir("data/lq"))){
   location_name[i] <- x1
   address[i] <- paste(x2[1:2], collapse=" ")
   temp1<-unlist(strsplit(address[i],", "))
-  city[i] <- temp1[2]
-  temp2<-unlist(strsplit(temp1[3]," "))
+  city[i] <- temp1[length(temp1)-1]
+  temp2<-unlist(strsplit(temp1[length(temp1)]," "))
   state[i] <- temp2[1]
   phone_number[i] <- strsplit(x2[3],": ")[[1]][2]
   fax_number[i] <- strsplit(x2[4],": ")[[1]][2]
@@ -115,9 +117,12 @@ for (i in 1:length(dir("data/lq"))){
   gr_whirlpool_select_rooms[i] <- as.numeric(grepl("Whirlpool",guest_room_amen))
 }
 
+
+#t<-lapply(test,function(x) length(unlist(strsplit(x[3],split=" "))))
+
 c=logical(length = 0)
 for(i in seq_along(address)){
-  a <- str_detect(address[i], state.abb)
+  a <- str_detect(state[i], state.abb)
   if(!TRUE %in% a){
     c=c(c, FALSE)
   }
@@ -125,12 +130,12 @@ for(i in seq_along(address)){
   
   }
 }
-lq = data.frame(location_name, address, phone_number, fax_number, latitude,longitude,
+lq = data.frame(location_name, address, city, state, phone_number, fax_number, latitude,longitude,
                 floors, rooms, suites,check_in_time,check_out_time,
                 indoor_swimming_pool , fitness_center,outdoor_swimming_pool , bright_side_market , business_center , express_check_out ,meeting_facilities , spa , 
                 gr_microwaves_all , gr_fridge_all , gr_samsung_flat_panel , gr_plug_and_play ,gr_whirlpool_select_rooms, c,
-                #nearby_sports_and_recreation , nearby_restaurants , entertainment_and_shopping ,area_attractions_and_landmarks , area_companies_and_businesses,
                 stringsAsFactors = FALSE)
+
 
 lq=lq[which(lq$c==TRUE),]
 

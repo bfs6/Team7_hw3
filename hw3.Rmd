@@ -55,6 +55,7 @@ closestdennysdistance=function(){
         mindist=temp
       }
       
+      
     }
     c=c(c, mindist)
     
@@ -71,9 +72,22 @@ howmanylaquinta=function(n){
     }
   }
   return(count)
-
+  
 }
-howmanylaquinta(1)
+
+#print
+k=closestdennysdistance()
+print(mean(k))
+print(sd(k))
+print(median(k))
+
+xlab=c(0.2,0.5,1,2,3,4,5)
+ylab=vector()
+for(i in 1:length(xlab)){
+  ylab=c(ylab, howmanylaquinta(xlab[i]))
+}
+barplot(ylab/length(lq$address), names.arg=xlab,ylab="percent" ,main="Percentage of Laquintas with Dennys within x miles ", 
+        xlab="miles")
 ```
 
 ```{r}
@@ -283,10 +297,29 @@ if (!(paste0(loc_state,loc_city) %in% paste0(lq$state,lq$city))){
     labels<-append(labels,lq_temp[i,"location_name"])
   }
   names(result) = labels
-  labels
+  names(result)
 }
+
 ```
 
+```{r}
+install.packages("maps")
+install.packages("mapproj")
+library(maps)
+library(mapproj)
+
+states <- matrix(c(state.name, tolower(state.abb)), nrow = length(state.abb))
+str_detect(states[,2], loc_state)
+statemap <- states[which(str_detect(states[,2], loc_state)==TRUE),]
+
+map("state", col="#01B8AA", bg="#374649", proj="albers", param=c(39,45))
+points(mapproject(lq_lat, lq_long), col=NA, bg="#F2C80F", pch=21, cex=dataset$Elevation / elevationMax * 0.5)
+map("county", statemap[1], col="#01B8AA", bg="#374649", proj="albers", param=c(39,45))
+points(mapproject(lq_lat, lq_long), col=NA, bg="#F2C80F", pch=21, cex=dataset$Elevation / elevationMax * 0.8)
+
+
+
+```
 
 #get_lq.R
 
