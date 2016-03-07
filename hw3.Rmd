@@ -4,27 +4,107 @@ author: "Basil Seif, Justin Wang, Yijun Li"
 date: "3/6/2016"
 output: html_document
 ---
+#Data Analysis
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+library(stringr)
+library(dplyr)
+#lat<-lq[,"latitude"] * pi /180
+#long<-lq[,"longitude"] * pi /180
+R = 3959
+
+to_Radian <- function(x){
+  return(x*pi/180)
+}
+
+harversine <- function(x1,y1,x2,y2){
+  x1<-to_Radian(x1)
+  x2<-to_Radian(x2)
+  y1<-to_Radian(y1)
+  y2<-to_Radian(y2)
+  
+  dx = x2-x1
+  dy = y2-y1
+  a = (sin(dx/2))^2 + cos(x1)*cos(x2)*(sin(dy/2))^2
+  c = 2*atan2(sqrt(a),sqrt(1-a))
+  d = R*c
+  return(d)
+}
+
+harversine(32.41349,
+           -99.77877,32.49136,
+           -99.72269)
+
+
+
+loc_state_temp<-as.character(readline("which state are you looking for?"))
+loc_state<-tolower(gsub("^\\s+|\\s+$", "", loc_state_temp))
+
+loc_city_temp<-as.character(readline("which city are you looking for?"))
+loc_city<-tolower(gsub("^\\s+|\\s+$", "", loc_city_temp))
+
+radius<-as.double(readline("what is your radius?"))
+
+lq$city<-tolower(lq$city)
+lq$state<-tolower(lq$state)
+dennys$city<-tolower(dennys$city)
+dennys$state<-tolower(dennys$state)
+
+if (!(paste0(loc_state,loc_city) %in% paste0(lq$state,lq$city))){
+  print(paste0("no La Quinta in ", loc_city, " ",loc_state))
+}else if (!(paste0(loc_state,loc_city) %in% paste0(dennys$state,dennys$city))){
+  print("no dennys nearby")
+}else{
+  lq_temp<-lq[lq$city==loc_city,] 
+  lq_temp<-lq_temp[lq_temp$state==loc_state,]
+  dennys_temp<-dennys[dennys$city==loc_city,]
+  dennys_temp<-dennys_temp[dennys_temp$state==loc_state,]
+  
+  dennys_nearby<-list()
+  num_dennys<-0
+  distance<-c()
+  result<-list()
+  labels<-c()
+  
+  lq_lat<-lq_temp[,"latitude"]
+  print(lq_lat)
+  lq_long<-lq_temp[,"longitude"]
+  print(lq_long)
+  dennys_lat<-as.numeric(dennys_temp[,"latitude"])
+  print(dennys_lat)
+  dennys_long<-as.numeric(dennys_temp[,"longitude"])
+  print(dennys_long)
+  
+  for(i in 1: nrow(lq_temp)){
+    for (j in 1: nrow(dennys_temp)){
+      dist = harversine(lq_lat[i],lq_long[i],dennys_lat[j],dennys_long[j])
+      print (dist)
+      if ( (dist < radius) | (dist == radius)){
+        
+        dennys_nearby<-append(dennys_nearby, dennys_temp[i,"address"])
+        distance<-append(distance,dist)
+      }
+    }
+    result[[i]] <- matrix(c(dennys_nearby,distance),nrow=length(distance))
+    labels<-append(labels,lq_temp[i,"location_name"])
+  }
+  names(result) = labels
+}
+
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+#get_lq.R
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#get_dennys.R
+Although the code was already created which only covered a 1000mile radius of stores, we had to change it to get information from all the Dennys in America. The way I did this was to choose 3 points on the map so that they covered all of the states aside from Alaska and Hawaii. The three points had zip codes of 64101, 89101 and 23218 which are Kansas City, Las Vegas and Richmond respectively. Then I choose zip codes in Alaska and Hawaii to get the last few states. This created 5 xml files in the data/dennys directory which I will use for parse_dennys.R
+parse_dennys.R
 
-```{r cars}
-summary(cars)
-```
+I scanned through each xml file in the directory data/dennys and then compiled an array of their addresses, city, zip code, country, latitude, longitude and UID. I used rbind to make a data frame of all the 5 xml files. Because some of the Dennys are not located in the US, I just removed all values that are did not have the value US in the data frame under the country column. Then I deleted all the duplicates. In the end I found 1597 Dennys in the US. 
 
-## Including Plots
+#parse_lq.R
 
-You can also embed plots, for example:
+#parse_dennys.R
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
