@@ -7,10 +7,204 @@ output: html_document
 #Data Analysis
 
 ```{r}
-library(stringr)
-library(dplyr)
-#lat<-lq[,"latitude"] * pi /180
-#long<-lq[,"longitude"] * pi /180
+load("data/dennys.Rdata", .GlobalEnv)
+load("data/lq.Rdata", .GlobalEnv)
+R = 3959
+
+to_Radian <- function(x){
+  return(x*pi/180)
+}
+
+harversine <- function(x1,y1,x2,y2){
+  x1<-to_Radian(x1)
+  x2<-to_Radian(x2)
+  y1<-to_Radian(y1)
+  y2<-to_Radian(y2)
+  
+  dx = x2-x1
+  dy = y2-y1
+  a = (sin(dx/2))^2 + cos(x1)*cos(x2)*(sin(dy/2))^2
+  c = 2*atan2(sqrt(a),sqrt(1-a))
+  d = R*c
+  return(d)
+}
+
+
+
+
+closestdennysdistance=function(){
+  
+  
+  lq$state<-tolower(lq$state)
+  dennys$state<-tolower(dennys$state)
+  lq$city<-tolower(lq$city)
+  dennys$city<-tolower(dennys$city)
+  
+  c=vector()
+  for (i in seq_along(lq$location_name)){
+    mindist=9999999
+    dennysubset=dennys[which(dennys$state==lq$state[i]),]
+    for(j in seq_along(dennysubset$uid)){
+      
+      x1=as.numeric(lq$latitude[i])
+      x2=as.numeric(lq$longitude[i])
+      y1=as.numeric(dennysubset$latitude[j])
+      y2=as.numeric(dennysubset$longitude[j])
+      temp=harversine(x1,x2,y1,y2) 
+      if (temp<=mindist){
+        mindist=temp
+      }
+      
+    }
+    c=c(c, mindist)
+    
+  }
+  return(c)
+}
+
+howmanylaquinta=function(n){
+  k=closestdennysdistance()
+  count=0
+  for (i in 1:length(k)){
+    if (k[i]<=n){
+      count=count+1
+    }
+  }
+  return(count)
+
+}
+howmanylaquinta(1)
+```
+
+```{r}
+lat<-lq[,"latitude"] * pi /180
+long<-lq[,"longitude"] * pi /180
+R = 3959
+
+to_Radian <- function(x){
+  return(x*pi/180)
+}
+
+harversine <- function(x1,y1,x2,y2){
+  x1<-to_Radian(x1)
+  x2<-to_Radian(x2)
+  y1<-to_Radian(y1)
+  y2<-to_Radian(y2)
+  
+  dx = x2-x1
+  dy = y2-y1
+  a = (sin(dx/2))^2 + cos(x1)*cos(x2)*(sin(dy/2))^2
+  c = 2*atan2(sqrt(a),sqrt(1-a))
+  d = R*c
+  return(d)
+}
+
+harversine(32.41349,
+           -99.77877,32.49136,
+           -99.72269)
+
+nearestLaQuinta <- function(loc_city_temp, loc_state_temp, radius){
+  lq$city<-tolower(lq$city)
+  lq$state<-tolower(lq$state)
+  dennys$city<-tolower(dennys$city)
+  dennys$state<-tolower(dennys$state)
+
+  if (!(paste0(loc_state,loc_city) %in% paste0(lq$state,lq$city))){
+    print(paste0("no La Quinta in ", loc_city, " ",loc_state))
+  }else if (!(paste0(loc_state,loc_city) %in% paste0(dennys$state,dennys$city))){
+    print("no dennys nearby")
+  }else{
+    lq_temp<-lq[lq$city==loc_city,] 
+    lq_temp<-lq_temp[lq_temp$state==loc_state,]
+    dennys_temp<-dennys[dennys$city==loc_city,]
+    dennys_temp<-dennys_temp[dennys_temp$state==loc_state,]
+    
+    dennys_nearby<-list()
+    num_dennys<-0
+    distance<-c()
+    result<-list()
+    labels<-c()
+    
+    lq_lat<-lq_temp[,"latitude"]
+    #print(lq_lat)
+    lq_long<-lq_temp[,"longitude"]
+    #print(lq_long)
+    dennys_lat<-as.numeric(dennys_temp[,"latitude"])
+    #print(dennys_lat)
+    dennys_long<-as.numeric(dennys_temp[,"longitude"])
+    #print(dennys_long)
+    
+    for(i in 1: nrow(lq_temp)){
+      for (j in 1: nrow(dennys_temp)){
+        dist = harversine(lq_lat[i],lq_long[i],dennys_lat[j],dennys_long[j])
+       #print (dist)
+        if ( (dist < radius) | (dist == radius)){
+          
+          dennys_nearby<-append(dennys_nearby, dennys_temp[i,"address"])
+          distance<-append(distance,dist)
+        }
+      }
+      result[[i]] <- matrix(c(dennys_nearby,distance),nrow=length(distance))
+      labels<-append(labels,lq_temp[i,"location_name"])
+    }
+    names(result) = labels
+    labels
+  }
+}
+
+lq$city<-tolower(lq$city)
+lq$state<-tolower(lq$state)
+dennys$city<-tolower(dennys$city)
+dennys$state<-tolower(dennys$state)
+
+if (!(paste0(loc_state,loc_city) %in% paste0(lq$state,lq$city))){
+  print(paste0("no La Quinta in ", loc_city, " ",loc_state))
+}else if (!(paste0(loc_state,loc_city) %in% paste0(dennys$state,dennys$city))){
+  print("no dennys nearby")
+}else{
+  lq_temp<-lq[lq$city==loc_city,] 
+  lq_temp<-lq_temp[lq_temp$state==loc_state,]
+  dennys_temp<-dennys[dennys$city==loc_city,]
+  dennys_temp<-dennys_temp[dennys_temp$state==loc_state,]
+  
+  dennys_nearby<-list()
+  num_dennys<-0
+  distance<-c()
+  result<-list()
+  labels<-c()
+  
+  lq_lat<-lq_temp[,"latitude"]
+  #print(lq_lat)
+  lq_long<-lq_temp[,"longitude"]
+  #print(lq_long)
+  dennys_lat<-as.numeric(dennys_temp[,"latitude"])
+  #print(dennys_lat)
+  dennys_long<-as.numeric(dennys_temp[,"longitude"])
+  #print(dennys_long)
+  
+  for(i in 1: nrow(lq_temp)){
+    for (j in 1: nrow(dennys_temp)){
+      dist = harversine(lq_lat[i],lq_long[i],dennys_lat[j],dennys_long[j])
+      #print (dist)
+      if ( (dist < radius) | (dist == radius)){
+        
+        dennys_nearby<-append(dennys_nearby, dennys_temp[i,"address"])
+        distance<-append(distance,dist)
+      }
+    }
+    result[[i]] <- matrix(c(dennys_nearby,distance),nrow=length(distance))
+    labels<-append(labels,lq_temp[i,"location_name"])
+  }
+  names(result) = labels
+  labels
+}
+nearestLaQuinta(Houston, TX, 25)
+
+```
+
+```{r}
+lat<-lq[,"latitude"] * pi /180
+long<-lq[,"longitude"] * pi /180
 R = 3959
 
 to_Radian <- function(x){
@@ -67,18 +261,18 @@ if (!(paste0(loc_state,loc_city) %in% paste0(lq$state,lq$city))){
   labels<-c()
   
   lq_lat<-lq_temp[,"latitude"]
-  print(lq_lat)
+  #print(lq_lat)
   lq_long<-lq_temp[,"longitude"]
-  print(lq_long)
+  #print(lq_long)
   dennys_lat<-as.numeric(dennys_temp[,"latitude"])
-  print(dennys_lat)
+  #print(dennys_lat)
   dennys_long<-as.numeric(dennys_temp[,"longitude"])
-  print(dennys_long)
+  #print(dennys_long)
   
   for(i in 1: nrow(lq_temp)){
     for (j in 1: nrow(dennys_temp)){
       dist = harversine(lq_lat[i],lq_long[i],dennys_lat[j],dennys_long[j])
-      print (dist)
+      #print (dist)
       if ( (dist < radius) | (dist == radius)){
         
         dennys_nearby<-append(dennys_nearby, dennys_temp[i,"address"])
@@ -89,8 +283,8 @@ if (!(paste0(loc_state,loc_city) %in% paste0(lq$state,lq$city))){
     labels<-append(labels,lq_temp[i,"location_name"])
   }
   names(result) = labels
+  labels
 }
-
 ```
 
 
