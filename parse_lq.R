@@ -1,6 +1,6 @@
 library(rvest)
 library(stringr)
-location_name<-address<-phone_number<-fax_number<-latitude<-longitude<-
+location_name<-address<-state<-city<-phone_number<-fax_number<-latitude<-longitude<-
   floors<-rooms<-suites<-check_in_time<-check_out_time<-
   indoor_swimming_pool <- fitness_center<-outdoor_swimming_pool <- bright_side_market <- business_center <- express_check_out <-
   meeting_facilities <- spa <- gr_microwaves_all <- gr_fridge_all <- gr_samsung_flat_panel <- gr_plug_and_play <-
@@ -19,7 +19,7 @@ for (i in 1:length(dir("data/lq"))){
   x2 <- p %>%
     html_nodes(".hotelDetailsBasicInfoTitle p") %>%
     html_text(trim=TRUE) %>%
-    strsplit("\n") %>%
+    strsplit("\\n") %>%
     lapply(function(x) gsub("^\\s+|\\s+$", "", x)) %>%
     unlist()
   x2 <- unique(x2[x2!=""])
@@ -54,43 +54,20 @@ for (i in 1:length(dir("data/lq"))){
     unlist()
   x5 <- unique(x5[x5!=""]) %>%
     strsplit(split=": ") 
-  
   d1<-sapply(x5,function(x) x[[1]])
   d2<-sapply(x5,function(x) x[[2]])
-  
   names(d2) = d1
-  
-  #nearbys
-  #x6 <- p %>%
-  #  html_nodes(".colctrl-50-50-c1") %>%
-  #  html_text(trim=TRUE) %>%
-  #  strsplit("\n") %>%
-  #  lapply(function(x) gsub("^\\s+ | \\s+$","",x)) %>%
-  #  lapply(function(x) unique(x[x!=""]))
-  #x6<-unlist(x6[[2]])
-  #n1<-which(x6=="Nearby Sports & Recreation")
-  #n2<-which(x6=="Nearby Restaurants")
-  #n3<-which(x6=="Entertainment & Shopping")
-  #n4<-length(x6)
-  #
-  #x7 <- p %>%
-  #  html_nodes(".colctrl-50-50-c0") %>%
-  #  html_text(trim=TRUE) %>%
-  #  strsplit("\n") %>%
-  #  lapply(function(x) gsub("^\\s+ | \\s+$","",x)) %>%
-  #  lapply(function(x) unique(x[x!=""]))
-  #x7<-x7[[2]]
-  #n5<-which(x7=="Area Attractions & Landmarks")
-  #n6<-which(x7=="Area Companies & Businesses")
-  #n7<-length(x7)
-  
   
   location_name[i] <- x1
   address[i] <- paste(x2[1:2], collapse=" ")
+  temp1<-unlist(strsplit(address[i],", "))
+  city[i] <- temp1[2]
+  temp2<-unlist(strsplit(temp1[3]," "))
+  state[i] <- temp2[1]
   phone_number[i] <- strsplit(x2[3],": ")[[1]][2]
   fax_number[i] <- strsplit(x2[4],": ")[[1]][2]
-  latitude[i]<-c[1]
-  longitude[i]<-c[2]
+  latitude[i]<-as.numeric(c[1])
+  longitude[i]<-as.numeric(c[2])
   
   if ("Floors" %in% names(d2)){
     floors[i] = d2["Floors"]
@@ -136,13 +113,6 @@ for (i in 1:length(dir("data/lq"))){
   gr_samsung_flat_panel[i] <- as.numeric(grepl("Samsung",guest_room_amen))
   gr_plug_and_play[i] <- as.numeric(grepl("Plug-and-Play",guest_room_amen))
   gr_whirlpool_select_rooms[i] <- as.numeric(grepl("Whirlpool",guest_room_amen))
-  
-  #nearby_sports_and_recreation[i] <- (n2-n1-1)
-  #nearby_restaurants[i] <- (n3-n2-1)
-  #entertainment_and_shopping[i] <- (n4-n3)
-  #
-  #area_attractions_and_landmarks[i] <- (n6-n5-1)
-  #area_companies_and_businesses[i] <- (n7-n6)
 }
 
 c=logical(length = 0)

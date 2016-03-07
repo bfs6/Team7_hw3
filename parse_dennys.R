@@ -40,3 +40,4 @@ dennys=dennys[!duplicated(dennys$uid),]
 
 save(dennys, file="data/dennys.Rdata")
 
+dennys
