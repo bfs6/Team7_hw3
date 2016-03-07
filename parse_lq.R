@@ -1,5 +1,6 @@
 #install.packages("xml2")
 library(rvest)
+library(stringr)
 
 location_name<-address<-state<-city<-phone_number<-fax_number<-latitude<-longitude<-
   floors<-rooms<-suites<-check_in_time<-check_out_time<-
