@@ -1,5 +1,6 @@
 library(rvest)
 library(magrittr)
+library(XML)
 
 xml_list=list.files("data/dennys")
 
