@@ -127,14 +127,21 @@ print(median(k))
 
 ```
 
-Therefor we created a histogram to show the percentages of Laquintas that have a Dennys within a certain distance of x miles. 
+Therefore we created a histogram to show the percentages of Laquintas that have a Dennys within a certain distance of x miles. 
 Here is our results:
 
 ```{r}
 barplot(ylab/length(lq$address), names.arg=xlab,ylab="percent" ,main="Percentage of Laquintas with Dennys within x miles ", 
         xlab="miles")
+
+
 ```
 
+```{r}
+table <- as.table(ylab)
+rownames(table)=xlab
+print(table)
+```
 Clearly 60% or 530 of the 878 Laquintas have a Dennys within 5 miles thus it clearly supports Hedbergs claim. 
 Furthermore a cumulative plot shows that most Laquintas are located witin 10 miles of a Dennys
 ```{r}
