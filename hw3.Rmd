@@ -121,6 +121,7 @@ for(i in 1:length(xlab)){
 After I computed a list of the closest Dennys to each Laquinta, I found that the mean distance between all Laquintas to their closest Dennys is 11.90 miles with a standard deviation of 20.54. This seems to refute Hedbergs claim since 11.90 miles is quite a long distance however we noticed that the relatively high standard deviation probably indicates the presence of outliers. A check on the median shows us that half of the Dennys are within 3. 18 miles of a Laquinta, thus favoring Hedbergs claim.
 
 ```{r}
+k=closestdennysdistance()
 print(mean(k))
 print(sd(k))
 print(median(k))
@@ -131,8 +132,7 @@ Therefore we created a histogram to show the percentages of Laquintas that have 
 Here is our results:
 
 ```{r}
-barplot(ylab/length(lq$address), names.arg=xlab,ylab="percent" ,main="Percentage of Laquintas with Dennys within x miles ", 
-        xlab="miles")
+barplot(ylab/length(lq$address), names.arg=xlab,ylab="percent" ,main="Percentage of Laquintas with Dennys within x miles ", xlab="miles")
 
 
 ```
